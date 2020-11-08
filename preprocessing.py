@@ -1,9 +1,12 @@
 import os 
 import music21 as m21
 from music21 import environment
+import unittest
 #m21 can parse kern, MIDI, MusicXML files and convert and revert these files @ will. Represents musc in an OOP manner. 
 
 KERN_DATASET_PATH = "data/test"
+#Value of 4 represents a whole note, below which is a fraction of a whole note
+ACCEPTABLE_DURATIONS = [0.25,0.5, 0.75,1.0,1.5,2,3,4]
 
 def load_songs_in_kern(dataset_path):
 	'''pass in a valid folder path holding all training songs in .krn format converts to m21 
@@ -22,6 +25,17 @@ def load_songs_in_kern(dataset_path):
 
 	return songs
 
+def has_acceptable_durations(song,acceptable_durations):
+	
+	'''expects music21 song object. 
+	   Returns True if all notes and rests within song are within predefined definitions for model. 
+	'''
+
+	for note in song.flat_.notesAndRests_:
+		if note.duration.quarterLength_ not in acceptable_durations:
+			return False
+
+	return True
 
 def preprocess(dataset_path):
 
@@ -29,6 +43,7 @@ def preprocess(dataset_path):
 	print("Loading songs ... ")
 	songs = load_songs_in_kern(dataset_path)
 	print(f"{len(songs)} songs loaded")
+
 	#filter out songs which  have non-acceptable durations 
 
 	#transpose all songs to Cmajor/Amin 
@@ -37,9 +52,13 @@ def preprocess(dataset_path):
 
 	#save the songs to text file
 
+
+
+class TestPreprocessing(unittest.TestCase):
+	pass
+
 if __name__ == "__main__":
 	songs = load_songs_in_kern(KERN_DATASET_PATH)
-	# print(preprocess(KERN_DATASET_PATH))
 	#isolate song
 	song = songs[0]
 	try:
