@@ -26,13 +26,13 @@ def load_songs_in_kern(dataset_path):
 	return songs
 
 def has_acceptable_durations(song,acceptable_durations):
-	
+
 	'''expects music21 song object. 
 	   Returns True if all notes and rests within song are within predefined definitions for model. 
 	'''
 
-	for note in song.flat_.notesAndRests_:
-		if note.duration.quarterLength_ not in acceptable_durations:
+	for note in song.flat.notesAndRests:
+		if note.duration.quarterLength not in acceptable_durations:
 			return False
 
 	return True
@@ -43,14 +43,15 @@ def preprocess(dataset_path):
 	print("Loading songs ... ")
 	songs = load_songs_in_kern(dataset_path)
 	print(f"{len(songs)} songs loaded")
+	for song in songs:
+		#filter out songs which  have non-acceptable durations 
+		if not has_acceptable_durations(song,ACCEPTABLE_DURATIONS):
+			continue
+		#transpose all songs to Cmajor/Amin 
 
-	#filter out songs which  have non-acceptable durations 
+		#encode songs w/ music time series representation
 
-	#transpose all songs to Cmajor/Amin 
-
-	#encode songs w/ music time series representation
-
-	#save the songs to text file
+		#save the songs to text file
 
 
 
@@ -61,6 +62,7 @@ if __name__ == "__main__":
 	songs = load_songs_in_kern(KERN_DATASET_PATH)
 	#isolate song
 	song = songs[0]
+	print(f"Has acceptable duration? {has_acceptable_durations(song,ACCEPTABLE_DURATIONS)}")
 	try:
 		song.show()
 	except:
