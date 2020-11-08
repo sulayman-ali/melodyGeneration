@@ -38,7 +38,8 @@ def has_acceptable_durations(song,acceptable_durations):
 
 def transpose(song):
 	'''expects music21 song object
-	   returns song tranposed to Cmaj/Amin (depending on song's origin mode)
+	   returns song tranposed to Cmaj/Amin (depending on song's origin mode) | 
+	   Done so generative model does not have to learn all 24 musical keys
 	'''
 
 	#get key from song | usually stored @ index 4 of first measure
@@ -63,7 +64,7 @@ def transpose(song):
 		interval = m21.interval.Interval(key.tonic, m21.pitch.Pitch("A"))
 
 	#tranpose the song by the calculated interval
-	transposed_song = song.tranpose(interval)
+	transposed_song = song.transpose(interval)
 	return transposed_song
 
 def preprocess(dataset_path):
@@ -78,8 +79,7 @@ def preprocess(dataset_path):
 			continue
 
 		#transpose all songs to Cmajor/Amin 
-
-
+		song = transpose(song)
 		#encode songs w/ music time series representation
 
 		#save the songs to text file
@@ -94,6 +94,7 @@ if __name__ == "__main__":
 	#isolate song
 	song = songs[0]
 	print(f"Has acceptable duration? {has_acceptable_durations(song,ACCEPTABLE_DURATIONS)}")
+	song = transpose(song)
 	try:
 		song.show()
 	except:
