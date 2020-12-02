@@ -84,21 +84,20 @@ def encode_song(song, time_step = 0.25):
 			symbol = event.pitch.midi
 
 		elif isinstance(event, m21.note.Rest):
-			symbol - "r"
+			symbol = "r"
 
 		#converts symbols into time series notation
 		steps = int(event.duration.quarterLength/time_step)
-
 		for step in range(steps):
 			if step == 0:
 				encoded_song.append(symbol)
 			else:
 				encoded_song.append("_")
 
-		#convert encoded_song to string form
-		encoded_song = " ".join(map(str,encoded_song))
+	#convert encoded_song to string form
+	encoded_song = " ".join(map(str,encoded_song))
 
-		return encoded_song
+	return encoded_song
 			
 
 def preprocess(dataset_path):
@@ -107,9 +106,11 @@ def preprocess(dataset_path):
 	print("Loading songs ... ")
 	songs = load_songs_in_kern(dataset_path)
 	print(f"{len(songs)} songs loaded")
+
 	for i, song in enumerate(songs):
 		#filter out songs which  have non-acceptable durations 
 		if not has_acceptable_durations(song,ACCEPTABLE_DURATIONS):
+			print("unnacceptable")
 			continue
 
 		#transpose all songs to Cmajor/Amin 
@@ -124,20 +125,21 @@ def preprocess(dataset_path):
 
 		with open(save_path,"w") as fp:
 			fp.write(encoded_song)
-	
+
 
 class TestPreprocessing(unittest.TestCase):
 	pass
 
 if __name__ == "__main__":
 	songs = load_songs_in_kern(KERN_DATASET_PATH)
+	print(f"Loaded {len(songs)} songs")
 	#isolate song
-	song = songs[0]
-	print(f"Has acceptable duration? {has_acceptable_durations(song,ACCEPTABLE_DURATIONS)}")
-	song = transpose(song)
-	try:
-		song.show()
-	except:
-		us = environment.UserSettings()
-		us['musicxmlPath'] = '/Applications/MuseScore 3.app/Contents/MacOS/mscore'
-		song.show()
+	#song = songs[0]
+
+	preprocess(KERN_DATASET_PATH)
+	# try:
+	# 	#song.show()
+	# except:
+		#us = environment.UserSettings()
+		#us['musicxmlPath'] = '/Applications/MuseScore 3.app/Contents/MacOS/mscore'
+		#song.show()
