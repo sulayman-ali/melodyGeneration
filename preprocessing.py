@@ -7,6 +7,7 @@ import unittest
 KERN_DATASET_PATH = "data/test"
 #Value of 4 represents a whole note, below which is a fraction of a whole note
 ACCEPTABLE_DURATIONS = [0.25,0.5, 0.75,1.0,1.5,2,3,4]
+SAVE_DIR = 'dataset'
 
 def load_songs_in_kern(dataset_path):
 	'''pass in a valid folder path holding all training songs in .krn format converts to m21 
@@ -67,24 +68,63 @@ def transpose(song):
 	transposed_song = song.transpose(interval)
 	return transposed_song
 
+def encode_song(song, time_step = 0.25):
+	'''
+	p = 60, d = 1 -> [60,"_","_","_"]
+	expects music21 object
+	returns string of time series representation of that object 
+
+	'''
+	encoded_song = []
+
+	for event in song.flat.notesAndRests:
+
+		#handle notes
+		if isinstance(event, m21.note.Note):
+			symbol = event.pitch.midi
+
+		elif isinstance(event, m21.note.Rest):
+			symbol - "r"
+
+		#converts symbols into time series notation
+		steps = int(event.duration.quarterLength/time_step)
+
+		for step in range(steps):
+			if step == 0:
+				encoded_song.append(symbol)
+			else:
+				encoded_song.append("_")
+
+		#convert encoded_song to string form
+		encoded_song = " ".join(map(str,encoded_song))
+
+		return encoded_song
+			
+
 def preprocess(dataset_path):
 
 	#load the data
 	print("Loading songs ... ")
 	songs = load_songs_in_kern(dataset_path)
 	print(f"{len(songs)} songs loaded")
-	for song in songs:
+	for i, song in enumerate(songs):
 		#filter out songs which  have non-acceptable durations 
 		if not has_acceptable_durations(song,ACCEPTABLE_DURATIONS):
 			continue
 
 		#transpose all songs to Cmajor/Amin 
 		song = transpose(song)
+
 		#encode songs w/ music time series representation
+		encoded_song = encode_song(song)
 
 		#save the songs to text file
+		file_name = str(i) + "_encoded"
+		save_path = os.path.join(SAVE_DIR, file_name)
 
-
+		with open(save_path,"w") as fp:
+			fp.write(encoded_song)
+	
 
 class TestPreprocessing(unittest.TestCase):
 	pass
