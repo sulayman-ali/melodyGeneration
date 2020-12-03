@@ -2,12 +2,15 @@ import os
 import music21 as m21
 from music21 import environment
 import unittest
+import json 
 #m21 can parse kern, MIDI, MusicXML files and convert and revert these files @ will. Represents music in an OOP manner. 
 
 KERN_DATASET_PATH = "data/test"
-#Value of 4 represents a whole note, below which is a fraction of a whole note
 ACCEPTABLE_DURATIONS = [0.25,0.5, 0.75,1.0,1.5,2,3,4]
 SAVE_DIR = 'dataset'
+SINGLE_FILE_DATASET = "file_dataset"
+SEQUENCE_LENGTH = 64
+MAPPING_PATH = "vocabulary.json"
 
 def load_songs_in_kern(dataset_path):
 	'''pass in a valid folder path holding all training songs in .krn format converts to m21 
@@ -126,17 +129,58 @@ def preprocess(dataset_path):
 		with open(save_path,"w") as fp:
 			fp.write(encoded_song)
 
+def load(file_path):
+    with open(file_path, "r") as fp:
+        song = fp.read()
+    return song
 
-class TestPreprocessing(unittest.TestCase):
-	pass
+def create_single_file_dataset(dataset_path,file_dataset_path,sequence_length):
+	
+	new_song_delimiter = "/ " * sequence_length
+
+	songs = ""
+	#load encoded songs and add delimiters
+	for path, _, folder in os.walk(dataset_path):  #
+		for file in folder:
+			file_path = os.path.join(path,file)
+			song = load(file_path)
+			songs = songs + song + " " + new_song_delimiter
+
+	songs = songs[:-1] #remove empty space
+	#save the string containing data
+	with open(file_dataset_path, "w") as fdp:
+		fdp.write(songs)
+
+	return songs 
+
+def create_mapping(songs, mapping_path):
+
+	#define grammar
+	mappings = {}
+
+	songs = songs.split()
+	vocabulary = list(set(songs))
+	for i, symbol in enumerate(vocabulary):
+		mappings[symbol] = i 
+
+	#save grammar to JSON
+	with open(mapping_path,"w") as mp:
+		json.dump(mappings,mp,indent = 4)
+
+# class TestPreprocessing(unittest.TestCase):
+# 	pass
+
+def main():
+	preprocess(KERN_DATASET_PATH)
+	songs = create_single_file_dataset(SAVE_DIR,SINGLE_FILE_DATASET,SEQUENCE_LENGTH)
+	create_mapping(songs,MAPPING_PATH)
 
 if __name__ == "__main__":
-	songs = load_songs_in_kern(KERN_DATASET_PATH)
-	print(f"Loaded {len(songs)} songs")
-	#isolate song
-	#song = songs[0]
-
-	preprocess(KERN_DATASET_PATH)
+	# songs = load_songs_in_kern(KERN_DATASET_PATH)
+	# print(f"Loaded {len(songs)} songs")
+	# #isolate song
+	# #song = songs[0]
+	main()
 	# try:
 	# 	#song.show()
 	# except:
