@@ -8,7 +8,7 @@ import numpy as np
 
 #m21 can parse kern, MIDI, MusicXML files and convert and revert these files @ will. Represents music in an OOP manner. 
 
-KERN_DATASET_PATH = "data/test"
+KERN_DATASET_PATH = "data/erk"
 ACCEPTABLE_DURATIONS = [0.25,0.5, 0.75,1.0,1.5,2,3,4]
 SAVE_DIR = 'dataset'
 SINGLE_FILE_DATASET = "file_dataset"
@@ -27,8 +27,11 @@ def load_songs_in_kern(dataset_path):
 			#load only .krn files
 			if file[-3:] == "krn":
 				#load w/ music 21, song is a m21 stream (m21 base class)
-				song = m21.converter.parse(os.path.join(path, file))
-				songs.append(song)
+				try:
+					song = m21.converter.parse(os.path.join(path, file))
+					songs.append(song)
+				except:
+					print(file)
 
 	return songs
 
@@ -184,7 +187,7 @@ def songs_to_int(songs):
 
 def generate_training_sequences(sequence_length):
 	#preps single file dataset into inputs of one-hot-encoded input vectors and targets
-	
+
 	#load songs and map to int
 	songs = load(SINGLE_FILE_DATASET)
 	int_songs = songs_to_int(songs)
