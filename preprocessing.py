@@ -3,6 +3,9 @@ import music21 as m21
 from music21 import environment
 import unittest
 import json 
+import tensorflow.keras as keras
+import numpy as np
+
 #m21 can parse kern, MIDI, MusicXML files and convert and revert these files @ will. Represents music in an OOP manner. 
 
 KERN_DATASET_PATH = "data/test"
@@ -167,13 +170,51 @@ def create_mapping(songs, mapping_path):
 	with open(mapping_path,"w") as mp:
 		json.dump(mappings,mp,indent = 4)
 
-# class TestPreprocessing(unittest.TestCase):
-# 	pass
+def songs_to_int(songs):
+	int_songs = []
+	with open(MAPPING_PATH,"r") as fp:
+		mappings = json.load(fp)
+
+	songs = songs.split()
+	for symbol in songs:
+		int_songs.append(mappings[symbol])
+
+	return int_songs
+
+
+def generate_training_sequences(sequence_length):
+	#preps single file dataset into inputs of one-hot-encoded input vectors and targets
+	
+	#load songs and map to int
+	songs = load(SINGLE_FILE_DATASET)
+	int_songs = songs_to_int(songs)
+
+	#generate inputs + targets for training
+	inputs = []
+	targets = []
+	num_sequences = len(int_songs) - SEQUENCE_LENGTH
+
+	for i in range(num_sequences):
+		inputs.append(int_songs[i:i+sequence_length])
+		targets.append(int_songs[i+sequence_length])
+
+	#one-hot encode sequences, music notes are not ordinal, so to represent them properly
+	#we need to one hot encode and then feed into LSTM
+	vocab_size = len(set(int_songs))
+	inputs = keras.utils.to_categorical(inputs, 
+		num_classes=vocab_size) #turns each input into OHE w/ vocab_size dimension
+
+	#convert targets into numpy array
+	targets = np.array(targets)
+	print(inputs)
+	return inputs, targets
+	#inputs:(num sequences, sequencelength)
 
 def main():
 	preprocess(KERN_DATASET_PATH)
 	songs = create_single_file_dataset(SAVE_DIR,SINGLE_FILE_DATASET,SEQUENCE_LENGTH)
 	create_mapping(songs,MAPPING_PATH)
+	inputs, targets = generate_training_sequences(SEQUENCE_LENGTH)
 
 if __name__ == "__main__":
 	# songs = load_songs_in_kern(KERN_DATASET_PATH)
